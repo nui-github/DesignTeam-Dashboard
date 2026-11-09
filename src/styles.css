@@ -11,6 +11,11 @@
 /* Brand logos: Simple Icons font -> <i class="si si-clickup"></i> */
 @import "simple-icons-font/font/simple-icons.min.css";
 
+/* Cascade order: ng-zorro sits above Tailwind's preflight (so its components keep their look) but BELOW Tailwind
+   utilities, so a class like text-brand or overflow-hidden on a zorro element actually wins. */
+@layer theme, base, zorro, components, utilities;
+@import "ng-zorro-antd/ng-zorro-antd.variable.min.css" layer(zorro);
+
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
@@ -36,6 +41,7 @@
   --color-critical: #d03b3b;
 
   --background-image-brand-gradient: linear-gradient(135deg, #1f5df9 0%, #16ea9e 100%);
+  --background-image-brand-gradient-h: linear-gradient(90deg, #1f5df9 0%, #16ea9e 100%);
 }
 
 html {
@@ -68,6 +74,10 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
+
+/* ng-zorro segmented control: pill shape to match the brand buttons (unlayered, so it wins over the zorro layer) */
+.ant-segmented, .ant-segmented-item, .ant-segmented-thumb { border-radius: 999px; }
+.ant-segmented-item-label { padding-inline: 1rem; min-height: 2.2rem; line-height: 2.2rem; }
 
 :focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
 .tabular { font-variant-numeric: tabular-nums; }

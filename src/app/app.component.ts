@@ -82,18 +82,46 @@ type Sort = 'open' | 'overdue' | 'name';
           </section>
 
           <section class="mt-14" aria-labelledby="team-h">
-            <div class="mb-5 flex flex-wrap items-end justify-between gap-4">
+            <div class="mb-5 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
               <div>
                 <h2 id="team-h" class="m-0 text-3xl font-bold tracking-tight text-brand">{{ i18n.t('team') }}</h2>
                 <p class="mt-1 text-sm text-slate">
                   @if (d.scope.sprint) { <b class="font-semibold text-navy">{{ i18n.t('inScope', { name: d.scope.sprint }) }}</b> &nbsp; }{{ i18n.t('teamHint') }}
                 </p>
               </div>
-              <nz-segmented [nzOptions]="sortOptions()" [ngModel]="sort()" (ngModelChange)="sort.set($any($event))" [attr.aria-label]="i18n.t('sort')" />
+              <div class="flex items-center gap-3">
+                <span class="text-sm text-slate">{{ i18n.t('sort') }}</span>
+                <nz-segmented [nzOptions]="sortOptions()" [ngModel]="sort()" (ngModelChange)="sort.set($any($event))" [attr.aria-label]="i18n.t('sort')" />
+              </div>
             </div>
-            <div class="grid grid-cols-[repeat(auto-fill,minmax(min(21rem,100%),1fr))] gap-5">
+
+            <!-- People filter: every person is one tap, several can be on at once -->
+            <div class="mb-6 flex flex-wrap items-center gap-2" role="group" [attr.aria-label]="i18n.t('filterPeople')">
+              <button type="button" class="chip" [class.on]="!picked().length" [attr.aria-pressed]="!picked().length" (click)="clearPicked()">
+                <lucide-icon name="users" [size]="16" aria-hidden="true" />
+                {{ i18n.t('allPeople') }}
+                <span class="cnt">{{ peopleOptions().length }}</span>
+              </button>
+              @for (o of peopleOptions(); track o.id) {
+                <button type="button" class="chip" [class.on]="isPicked(o.id)" [attr.aria-pressed]="isPicked(o.id)" [title]="o.name" (click)="togglePicked(o.id)">
+                  <span class="av" aria-hidden="true">
+                    @if (o.avatar) { <img [src]="o.avatar" alt="" referrerpolicy="no-referrer"> } @else { {{ o.initials }} }
+                  </span>
+                  {{ o.short }}
+                  @if (isPicked(o.id)) { <lucide-icon name="check" [size]="15" aria-hidden="true" /> }
+                </button>
+              }
+              @if (picked().length) {
+                <span class="ml-1 text-sm text-slate" aria-live="polite">{{ i18n.t('showingN', { n: picked().length, total: peopleOptions().length }) }}</span>
+                <button type="button" class="clear" (click)="clearPicked()">{{ i18n.t('clearFilter') }}</button>
+              }
+            </div>
+            <!-- min-h: keeps the page from jumping when a filter leaves only one row of cards -->
+            <div class="grid min-h-[26rem] grid-cols-[repeat(auto-fill,minmax(min(21rem,100%),1fr))] content-start gap-5">
               @for (p of sorted(); track p.id) { <app-member-card [p]="p" (select)="selected.set(p)" /> }
-              @if (d.unassigned; as u) { <app-member-card [p]="u" (select)="selected.set(u)" /> }
+              @if (d.unassigned; as u) {
+                @if (!picked().length || picked().includes('unassigned')) { <app-member-card [p]="u" (select)="selected.set(u)" /> }
+              }
             </div>
           </section>
 
@@ -118,6 +146,26 @@ type Sort = 'open' | 'overdue' | 'name';
       }
     </main>
   `,
+  styles: `
+    .chip {
+      display: inline-flex; align-items: center; gap: .5rem; height: 2.6rem; padding: 0 .95rem 0 .4rem;
+      border: 1px solid var(--color-line); border-radius: 999px; background: #fff; color: var(--color-navy);
+      font-size: .95rem; font-weight: 500; cursor: pointer; transition: background .15s, border-color .15s, color .15s, transform .1s;
+    }
+    .chip:first-child { padding-left: .95rem; }
+    .chip:hover { border-color: var(--color-brand); }
+    .chip:active { transform: scale(.97); }
+    .chip.on { background: var(--color-navy); border-color: var(--color-navy); color: #fff; }
+    .chip .av {
+      display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border-radius: 50%; overflow: hidden;
+      background: var(--color-tint); color: var(--color-navy); font-size: .7rem; font-weight: 700;
+    }
+    .chip .av img { width: 100%; height: 100%; object-fit: cover; }
+    .chip.on .av { background: var(--color-mint); }
+    .chip .cnt { min-width: 1.4rem; padding: 0 .4rem; border-radius: 999px; background: var(--color-tint); font-size: .75rem; line-height: 1.4rem; text-align: center; }
+    .chip.on .cnt { background: rgb(255 255 255 / .18); }
+    .clear { border: 0; background: none; padding: .25rem .4rem; color: var(--color-brand); font-size: .9rem; font-weight: 500; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  `,
 })
 export class AppComponent implements OnInit {
   readonly svc = inject(DashboardService);
@@ -133,8 +181,24 @@ export class AppComponent implements OnInit {
     { label: this.i18n.t('s_name'), value: 'name' },
   ]);
 
+  /** Ids chosen in the people filter. Empty = everyone. */
+  readonly picked = signal<string[]>([]);
+  readonly peopleOptions = computed(() => {
+    const d = this.svc.data();
+    const people = [...(d?.users ?? [])].sort((a, b) => a.name.localeCompare(b.name)).map((u) => ({
+      id: u.id, name: u.name, short: u.name.split(/\s+/)[0], initials: u.initials, avatar: u.avatar ?? null,
+    }));
+    return d?.unassigned
+      ? [...people, { id: 'unassigned', name: this.i18n.t('unassigned'), short: this.i18n.t('unassigned'), initials: '–', avatar: null }]
+      : people;
+  });
+  isPicked(id: string) { return this.picked().includes(id); }
+  togglePicked(id: string) { this.picked.update((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id])); }
+  clearPicked() { this.picked.set([]); }
+
   readonly sorted = computed(() => {
-    const us = [...(this.svc.data()?.users ?? [])];
+    const pick = this.picked();
+    const us = [...(this.svc.data()?.users ?? [])].filter((u) => !pick.length || pick.includes(u.id));
     switch (this.sort()) {
       case 'overdue': return us.sort((a, b) => b.overdue - a.overdue || b.open - a.open);
       case 'name': return us.sort((a, b) => a.name.localeCompare(b.name));

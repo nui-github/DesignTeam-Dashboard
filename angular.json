@@ -27,7 +27,6 @@
               }
             ],
             "styles": [
-              "node_modules/ng-zorro-antd/ng-zorro-antd.variable.min.css",
               "src/styles.css"
             ],
             "scripts": []

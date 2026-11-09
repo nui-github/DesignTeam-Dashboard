@@ -15,11 +15,11 @@ import { Kpi } from '../core/models';
       <div class="pointer-events-none absolute -right-32 top-24 h-[30rem] w-[26rem] rounded-tl-[12rem] bg-tint-2" aria-hidden="true"></div>
 
       <div class="relative mx-auto max-w-[88rem] px-6 pb-10 pt-12 lg:px-10">
-        <h1 id="hero-h1" class="max-w-[22em] text-[clamp(1.9rem,3.6vw,3.6rem)] font-medium leading-[1.2] tracking-tight text-navy text-balance">
+        <h1 id="hero-h1" class="max-w-[22em] text-[clamp(1.9rem,3.6vw,3.6rem)] font-medium leading-[1.4] tracking-tight text-navy text-balance">
           @if (sprint()) { {{ i18n.t('heroSprintDone', { name: sprint()! }) }} } @else { {{ i18n.t('heroDone') }} }
           <b class="fig">{{ k().counts.done }}</b>
           {{ i18n.t('heroOf') }} <b class="fig">{{ k().total }}</b> {{ i18n.t('heroTasks') }}
-          (<b class="fig">{{ pct() }}%</b>)
+          <span class="whitespace-nowrap">(<b class="fig">{{ pct() }}%</b>)</span>
           {{ i18n.t('heroOverdue') }}
           <b class="fig" [class.bad]="k().overdue > 0">{{ k().overdue }}</b> {{ i18n.t('heroTail') }}
         </h1>
@@ -58,9 +58,15 @@ import { Kpi } from '../core/models';
     </section>
   `,
   styles: `
-    /* solid brand blue for legibility, brand gradient as an underline */
-    .fig { font-weight: 700; color: var(--color-brand); padding: 0 .06em .02em; background: var(--background-image-brand-gradient) no-repeat 0 100% / 100% .09em; }
-    .fig.bad { color: var(--color-critical); background: linear-gradient(var(--color-critical), var(--color-critical)) no-repeat 0 100% / 100% .09em; }
+    /* Figures: solid brand blue for legibility, gradient underline drawn as a bottom border on an inline-block with
+       line-height 1, so the underline sits right under the digits instead of clashing with Thai tone marks. */
+    .fig {
+      display: inline-block; line-height: 1; padding: 0 .04em .12em; margin: 0 .04em;
+      font-weight: 700; color: var(--color-brand);
+      border-bottom: .09em solid transparent;
+      border-image: var(--background-image-brand-gradient-h) 1;
+    }
+    .fig.bad { color: var(--color-critical); border-image: none; border-bottom-color: var(--color-critical); }
     .tile { background: #fff; border: 1px solid var(--color-line); border-radius: 1.6rem; padding: 1.1rem 1.4rem 1rem; }
     .tile dt { color: var(--color-slate); font-size: .95rem; }
     .tile .num { margin: 0; font-size: clamp(2.4rem, 3.6vw, 3.8rem); font-weight: 700; line-height: 1.1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }

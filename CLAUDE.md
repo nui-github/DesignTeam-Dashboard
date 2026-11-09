@@ -9,3 +9,4 @@ Design Team Dashboard: Angular 19 + ng-zorro + Tailwind 4 front end, Vercel func
 - UI text goes in `src/app/core/i18n.service.ts` (th + en). Brand colours/tokens live in `src/styles.css`.
 - Fonts: IBM Plex Sans Thai. Icons: Lucide (register in `src/app/app.config.ts`). Logos: Simple Icons font (`si si-*`).
 - Dev preview: `.claude/launch.json` configs `api-demo` (3111) and `web` (4210).
+- ng-zorro CSS lives in a cascade layer below Tailwind utilities (see top of `src/styles.css`). Keep that order; do not add the zorro stylesheet to `angular.json` again.

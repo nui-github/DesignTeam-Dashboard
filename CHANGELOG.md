@@ -2,6 +2,16 @@
 
 Update this file with every change (see CLAUDE.md).
 
+## 2026-11-09 — People filter, stale-while-revalidate cache
+- "งานรายคน" has a multi-select people filter, redesigned as one-tap chips (avatar + first name, "ทุกคน" resets, "Unassigned" included) instead of a dropdown: everyone is visible at once, several can be on together (navy = selected), "แสดง N จาก M คน" and a "ล้างตัวกรอง" link appear when filtered. It filters the person cards only; headline, KPIs and charts stay team-wide.
+- Sort control sits on the heading row with a "เรียงตาม" label, pill-shaped. The card grid has a min-height so the page does not jump when a filter leaves one row.
+- API cache is now stale-while-revalidate: once loaded, viewers always get an instant answer; an expired cache is served and refreshed in the background (the Refresh button still waits for fresh data). A failed background refresh keeps the previous data.
+
+## 2026-11-09 — Hero typography, ng-zorro CSS layer
+- Headline line-height 1.2 → 1.4 so Thai tone marks no longer collide with the next line.
+- Figures in the headline: underline is now a gradient bottom border on an inline-block with `line-height: 1`, so it sits right under the digits instead of floating between lines. "(10%)" never splits across lines.
+- ng-zorro's CSS is imported from `src/styles.css` into a cascade layer (`@layer theme, base, zorro, components, utilities`): above Tailwind preflight, below Tailwind utilities. Tailwind classes now win on zorro elements (headings navy, section titles brand blue, `overflow-hidden` etc.). It was removed from `angular.json` `styles`; restart `ng serve` after changing angular.json.
+
 ## 2026-11-09 — Fix: gradient bar on person cards followed the rounded corners
 - The top gradient bar poked out of the card corners because ng-zorro's unlayered button reset (`overflow: visible`) beat Tailwind's layered `overflow-hidden`. Clipping is now set in the component's own CSS. Tip: when a Tailwind utility on a zorro element seems ignored, move it to component CSS.
 
