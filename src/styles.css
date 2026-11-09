@@ -1,0 +1,80 @@
+/* Fonts: IBM Plex Sans Thai (self-hosted via @fontsource, Thai + Latin subsets only) */
+@import "@fontsource/ibm-plex-sans-thai/thai-400.css";
+@import "@fontsource/ibm-plex-sans-thai/thai-500.css";
+@import "@fontsource/ibm-plex-sans-thai/thai-600.css";
+@import "@fontsource/ibm-plex-sans-thai/thai-700.css";
+@import "@fontsource/ibm-plex-sans-thai/latin-400.css";
+@import "@fontsource/ibm-plex-sans-thai/latin-500.css";
+@import "@fontsource/ibm-plex-sans-thai/latin-600.css";
+@import "@fontsource/ibm-plex-sans-thai/latin-700.css";
+
+/* Brand logos: Simple Icons font -> <i class="si si-clickup"></i> */
+@import "simple-icons-font/font/simple-icons.min.css";
+
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Brand tokens (from the colour reference)
+   Primary:  navy #010136, blue #1F5DF9, green #16EA9E
+   Secondary: grey #666666, white #FFFFFF
+   Gradient: #1F5DF9 -> #16EA9E
+   Use as Tailwind utilities: bg-navy, text-brand, border-mint, bg-brand-gradient ...
+--------------------------------------------------------------------------- */
+@theme static {
+  --font-sans: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --color-navy: #010136;
+  --color-brand: #1f5df9;
+  --color-brand-600: #1548c7;
+  --color-mint: #16ea9e;
+  --color-slate: #666666;
+  --color-tint: #e8f2fc; /* soft background wash seen behind the reference slide */
+  --color-tint-2: #eaf7f3;
+  --color-line: #dfe5f0;
+  --color-todo: #c9cedb;
+  --color-review: #7da2fc;
+  --color-critical: #d03b3b;
+
+  --background-image-brand-gradient: linear-gradient(135deg, #1f5df9 0%, #16ea9e 100%);
+}
+
+html {
+  /* Slightly larger base on big screens so the page reads from a projector */
+  font-size: clamp(15px, 0.5vw + 11px, 19px);
+
+  /* ng-zorro theme variables -> brand */
+  --ant-primary-color: #1f5df9;
+  --ant-primary-color-hover: #4a7dfb;
+  --ant-primary-color-active: #1548c7;
+  --ant-primary-color-outline: rgba(31, 93, 249, 0.2);
+  --ant-primary-1: #e8f0ff;
+  --ant-primary-2: #c3d4fd;
+  --ant-primary-3: #9dbafc;
+  --ant-primary-4: #7da2fc;
+  --ant-primary-5: #4a7dfb;
+  --ant-primary-6: #1f5df9;
+  --ant-primary-7: #1548c7;
+  --ant-success-color: #16ea9e;
+  --ant-link-color: #1f5df9;
+  --ant-heading-color: #010136;
+  --ant-text-color: #010136;
+  --ant-text-color-secondary: #666666;
+}
+
+body {
+  margin: 0;
+  background: #fff;
+  color: var(--color-navy);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
+.tabular { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+@media print {
+  .no-print { display: none !important; }
+}
