@@ -2,6 +2,12 @@
 
 Update this file with every change (see CLAUDE.md).
 
+## 2026-11-09 — Fix: gradient bar on person cards followed the rounded corners
+- The top gradient bar poked out of the card corners because ng-zorro's unlayered button reset (`overflow: visible`) beat Tailwind's layered `overflow-hidden`. Clipping is now set in the component's own CSS. Tip: when a Tailwind utility on a zorro element seems ignored, move it to component CSS.
+
+## 2026-11-09 — Fix: long task titles overflowed person cards
+- Task titles in person cards now truncate with an ellipsis and the due label ("เลย N วัน") always stays inside the card (grid tracks and card host get `min-w-0`; due label `shrink-0`). The card grid column minimum is `min(21rem, 100%)` so narrow screens do not overflow.
+
 ## 2026-11-09 — Sprint-focused numbers, faster ClickUp fetch
 - Cancelled tasks (status matches cancel/ยกเลิก/reject/abandon/won't/obsolete) are excluded from every count, rate and chart; a footnote shows how many in the sprint.
 - Headline, KPIs, status/priority and the per-person cards are now scoped to the current sprint: the List whose name matches `CURRENT_SPRINT_MATCH` (default `current`, e.g. "Sprint 42 (Current)"). No match = whole board as before. The 12-week chart still covers all recent work.

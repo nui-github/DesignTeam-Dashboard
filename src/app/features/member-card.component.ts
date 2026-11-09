@@ -7,11 +7,11 @@ import { GROUPS, Person } from '../core/models';
 /** One card per person: counts, status bar, next 3 tasks. Click opens the drawer. */
 @Component({
   selector: 'app-member-card',
-  host: { class: 'block' },
+  host: { class: 'block min-w-0' },
   imports: [LucideAngularModule],
   template: `
     <button type="button" (click)="select.emit()"
-            class="group relative block h-full w-full cursor-pointer overflow-hidden rounded-[1.6rem] border border-line bg-white p-5 text-left transition hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-[0_10px_30px_-12px_rgba(31,93,249,.35)]"
+            class="card group relative block h-full w-full cursor-pointer rounded-[1.6rem] border border-line bg-white p-5 text-left transition hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-[0_10px_30px_-12px_rgba(31,93,249,.35)]"
             [attr.aria-label]="p().name + ': ' + p().open + ' ' + i18n.t('nOpen') + ', ' + p().overdue + ' ' + i18n.t('nOverdue')">
       <span class="absolute inset-x-0 top-0 h-1.5 bg-brand-gradient" aria-hidden="true"></span>
 
@@ -45,11 +45,11 @@ import { GROUPS, Person } from '../core/models';
       </div>
 
       @if (next().length) {
-        <ul class="mt-4 grid gap-1.5 border-t border-line pt-3 text-sm">
+        <ul class="mt-4 grid grid-cols-1 gap-1.5 border-t border-line pt-3 text-sm">
           @for (t of next(); track t.id) {
-            <li class="flex items-baseline gap-3">
+            <li class="flex min-w-0 items-baseline gap-3">
               <span class="min-w-0 flex-1 truncate" [title]="t.name">{{ t.name }}</span>
-              <span class="whitespace-nowrap text-xs" [class.font-semibold]="t.due.late" [class.text-critical]="t.due.late" [class.text-slate]="!t.due.late">{{ t.due.text }}</span>
+              <span class="shrink-0 whitespace-nowrap text-xs" [class.font-semibold]="t.due.late" [class.text-critical]="t.due.late" [class.text-slate]="!t.due.late">{{ t.due.text }}</span>
             </li>
           }
         </ul>
@@ -59,6 +59,9 @@ import { GROUPS, Person } from '../core/models';
     </button>
   `,
   styles: `
+    /* Plain CSS, not a Tailwind utility: ng-zorro's unlayered button reset (overflow: visible) beats Tailwind's layered
+       overflow-hidden, which let the gradient bar poke out of the rounded corners. */
+    .card { overflow: hidden; }
     .num { font-size: 1.9rem; font-weight: 700; line-height: 1.1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
     .lbl { display: block; font-size: .8rem; color: var(--color-slate); }
   `,

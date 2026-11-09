@@ -91,7 +91,7 @@ type Sort = 'open' | 'overdue' | 'name';
               </div>
               <nz-segmented [nzOptions]="sortOptions()" [ngModel]="sort()" (ngModelChange)="sort.set($any($event))" [attr.aria-label]="i18n.t('sort')" />
             </div>
-            <div class="grid grid-cols-[repeat(auto-fill,minmax(21rem,1fr))] gap-5">
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(min(21rem,100%),1fr))] gap-5">
               @for (p of sorted(); track p.id) { <app-member-card [p]="p" (select)="selected.set(p)" /> }
               @if (d.unassigned; as u) { <app-member-card [p]="u" (select)="selected.set(u)" /> }
             </div>
