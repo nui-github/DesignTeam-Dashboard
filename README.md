@@ -52,12 +52,12 @@ Then in Vercel: **Add New > Project > import the repo**. `vercel.json` already s
 | `CLICKUP_TEAM_ID` | from `npm run discover` |
 | `CLICKUP_SPACE_IDS` | Design Space id(s), comma separated |
 | `DASHBOARD_PASSWORD` | **required in practice**: shared password shown on a login screen |
-| `MEETING_TAG`, `MEETING_LIST_IDS`, `TZ` | optional |
+| `MEETING_TAG`, `MEETING_LIST_IDS`, `TZ`, `CURRENT_SPRINT_MATCH`, `HISTORY_DAYS`, `CACHE_TTL_SECONDS` | optional |
 
 **Security:** the Vercel URL is public. Without `DASHBOARD_PASSWORD` anyone with the link sees internal task data.
 With it, `/api/dashboard` answers 401 until the password is sent (`x-dashboard-key` header, kept in `sessionStorage`).
 The static page itself contains no data. Every push to `main` redeploys; other branches get preview URLs.
-Responses are `Cache-Control: private, no-store`; the function caches ClickUp results in memory for `CACHE_TTL_SECONDS` (60).
+Responses are `Cache-Control: private, no-store`; the function caches ClickUp results in memory for `CACHE_TTL_SECONDS` (300).
 
 ## Project layout
 
@@ -79,6 +79,9 @@ New brand logo: `<i class="si si-figma"></i>`.
 All text lives in `src/app/core/i18n.service.ts` (add a key to both `th` and `en`).
 
 ## How numbers are defined
+- **Scope:** headline, KPIs, status/priority and person cards cover the **current sprint**: the List whose name matches `CURRENT_SPRINT_MATCH` (default `current`, e.g. "Sprint 42 (Current)"). No match = the whole board. The 12-week chart covers all recent work.
+- **Cancelled** tasks (status has cancel/ยกเลิก/reject/abandon/won't/obsolete) are excluded everywhere.
+- Only tasks updated in the last `HISTORY_DAYS` (100) are fetched, which keeps loads to a few seconds.
 - **Done**: ClickUp status type done/closed. **In review**: status name has review/approval/feedback/QA. **Not started**: open type. Else **In progress**.
 - **Overdue**: not done and due before today. **Due this week**: today through Sunday.
 - A task with two assignees counts for both people; team totals count it once.

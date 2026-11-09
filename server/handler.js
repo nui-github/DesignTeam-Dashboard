@@ -7,7 +7,7 @@ import { aggregate } from './aggregate.js';
 import { createCache } from './cache.js';
 import { mockRaw } from './mock.js';
 
-const cache = createCache((Number(process.env.CACHE_TTL_SECONDS) || 60) * 1000);
+const cache = createCache((Number(process.env.CACHE_TTL_SECONDS) || 300) * 1000);
 
 const sha = (s) => crypto.createHash('sha256').update(String(s)).digest();
 

@@ -1,6 +1,7 @@
 // ClickUp REST API v2 client. Returns raw ClickUp-shaped data; aggregate.js does the math.
 const BASE = 'https://api.clickup.com/api/v2';
 const MAX_PAGES = 30; // 100 tasks per page -> 3000 tasks ceiling
+const PAGE_BATCH = 5; // concurrent page requests (ClickUp limit: 100 req/min)
 const COMMENT_TASK_LIMIT = 20; // most recently updated tasks to read comments from
 const MEETING_TASK_LIMIT = 15;
 const CONCURRENCY = 4;
@@ -21,7 +22,21 @@ async function request(path, params, token, attempt = 0) {
     if (Array.isArray(v)) v.forEach((x) => url.searchParams.append(`${k}[]`, x));
     else if (v !== undefined && v !== '') url.searchParams.set(k, v);
   }
-  const res = await fetch(url, { headers: { Authorization: token, 'Content-Type': 'application/json' } });
+  let res;
+  try {
+    res = await fetch(url, { headers: { Authorization: token, 'Content-Type': 'application/json' } });
+  } catch (e) {
+    // Transient connect/DNS hiccups are common on office networks: retry before giving up.
+    if (attempt < 2) {
+      await sleep(600 * (attempt + 1));
+      return request(path, params, token, attempt + 1);
+    }
+    // Node's bare "fetch failed" hides the real reason in e.cause (DNS, timeout, TLS, proxy...).
+    const code = e.cause?.code || e.cause?.message || e.message;
+    throw new ClickUpError(`Cannot reach api.clickup.com (${code})`, {
+      hint: 'Network problem between this machine and ClickUp: check internet/VPN/firewall/proxy. Try: curl -sS -m 10 https://api.clickup.com/api/v2/team',
+    });
+  }
 
   if (res.status === 429 && attempt < 2) {
     const reset = Number(res.headers.get('x-ratelimit-reset'));
@@ -58,15 +73,28 @@ export function loadConfig(env = process.env) {
     listIds: csv(env.CLICKUP_LIST_IDS),
     meetingTag: (env.MEETING_TAG || 'meeting').toLowerCase(),
     meetingListIds: csv(env.MEETING_LIST_IDS),
+    // Only tasks touched in this window are fetched: enough for the current sprint and the 12-week chart,
+    // and far fewer pages than the whole board history.
+    historyDays: Number(env.HISTORY_DAYS) || 100,
   };
 }
 
 async function pagedTasks(path, baseParams, token) {
+  // Pages are independent, so fetch PAGE_BATCH at a time (a board with ~1,800 tasks is 19 pages;
+  // one by one that took ~27s). Stop after the batch that contains the last page.
   const out = [];
-  for (let page = 0; page < MAX_PAGES; page++) {
-    const data = await request(path, { ...baseParams, page }, token);
-    out.push(...(data.tasks || []));
-    if (data.last_page || !(data.tasks || []).length) break;
+  for (let start = 0; start < MAX_PAGES; start += PAGE_BATCH) {
+    const pages = await Promise.all(
+      Array.from({ length: Math.min(PAGE_BATCH, MAX_PAGES - start) }, (_, i) =>
+        request(path, { ...baseParams, page: start + i }, token),
+      ),
+    );
+    let done = false;
+    for (const data of pages) {
+      out.push(...(data.tasks || []));
+      if (data.last_page || !(data.tasks || []).length) done = true;
+    }
+    if (done) break;
   }
   return out;
 }
@@ -90,7 +118,13 @@ export async function fetchRaw(cfg) {
   if (!cfg.teamId && !cfg.listIds.length)
     throw new ClickUpError('CLICKUP_TEAM_ID missing', { hint: 'Run `npm run discover` to find your Workspace id.' });
 
-  const params = { include_closed: true, subtasks: true, order_by: 'updated', reverse: false };
+  const params = {
+    include_closed: true,
+    subtasks: true,
+    order_by: 'updated',
+    reverse: false,
+    date_updated_gt: Date.now() - cfg.historyDays * 86400000,
+  };
   let tasks = [];
 
   if (cfg.listIds.length) {

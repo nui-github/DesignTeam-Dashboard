@@ -69,7 +69,7 @@ type Sort = 'open' | 'overdue' | 'name';
       @if (svc.needsLogin()) {
         <app-login />
       } @else if (d) {
-        <app-hero [k]="d.kpi" />
+        <app-hero [k]="d.kpi" [sprint]="d.scope.sprint" />
 
         <div class="mx-auto max-w-[88rem] px-6 lg:px-10">
           <section class="grid gap-6 lg:grid-cols-[minmax(0,1.9fr)_minmax(0,1fr)]" [attr.aria-label]="i18n.t('trend')">
@@ -78,14 +78,16 @@ type Sort = 'open' | 'overdue' | 'name';
               <p class="mt-1 text-sm text-slate">{{ i18n.t('trendSub') }}</p>
               <app-throughput-chart [trend]="d.trend" />
             </div>
-            <div class="rounded-[1.6rem] border border-line bg-white p-6"><app-status-panel [k]="d.kpi" /></div>
+            <div class="rounded-[1.6rem] border border-line bg-white p-6"><app-status-panel [k]="d.kpi" [sprint]="d.scope.sprint" [cancelled]="d.cancelled" /></div>
           </section>
 
           <section class="mt-14" aria-labelledby="team-h">
             <div class="mb-5 flex flex-wrap items-end justify-between gap-4">
               <div>
                 <h2 id="team-h" class="m-0 text-3xl font-bold tracking-tight text-brand">{{ i18n.t('team') }}</h2>
-                <p class="mt-1 text-sm text-slate">{{ i18n.t('teamHint') }}</p>
+                <p class="mt-1 text-sm text-slate">
+                  @if (d.scope.sprint) { <b class="font-semibold text-navy">{{ i18n.t('inScope', { name: d.scope.sprint }) }}</b> &nbsp; }{{ i18n.t('teamHint') }}
+                </p>
               </div>
               <nz-segmented [nzOptions]="sortOptions()" [ngModel]="sort()" (ngModelChange)="sort.set($any($event))" [attr.aria-label]="i18n.t('sort')" />
             </div>

@@ -9,7 +9,7 @@ import { GROUPS, Kpi, PRIORITIES } from '../core/models';
   template: `
     <div class="grid gap-9">
       <div>
-        <h3 class="text-lg font-semibold">{{ i18n.t('status') }}</h3>
+        <h3 class="text-lg font-semibold">{{ sprint() ? i18n.t('statusSprint') : i18n.t('status') }}</h3>
         <div class="mt-4 flex h-3.5 gap-0.5" role="img" [attr.aria-label]="i18n.t('status')">
           @for (g of groups; track g) {
             @if (k().counts[g]) {
@@ -27,6 +27,7 @@ import { GROUPS, Kpi, PRIORITIES } from '../core/models';
             </li>
           }
         </ul>
+        @if (cancelled() > 0) { <p class="mt-4 text-sm text-slate">{{ i18n.t('cancelledNote', { n: cancelled() }) }}</p> }
       </div>
 
       <div>
@@ -47,6 +48,8 @@ import { GROUPS, Kpi, PRIORITIES } from '../core/models';
 export class StatusPanelComponent {
   readonly i18n = inject(I18n);
   readonly k = input.required<Kpi>();
+  readonly sprint = input<string | null>(null);
+  readonly cancelled = input(0);
   readonly groups = GROUPS;
   readonly color = GROUP_COLOR;
   readonly prioColor = PRIORITY_COLOR;

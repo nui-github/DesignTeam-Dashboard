@@ -10,6 +10,14 @@
       "env": { "MOCK": "1", "API_PORT": "3111" }
     },
     {
+      "name": "api-live",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["server/index.js"],
+      "port": 3111,
+      "autoPort": false,
+      "env": { "API_PORT": "3111" }
+    },
+    {
       "name": "web",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["ng", "serve", "--port", "4210"],

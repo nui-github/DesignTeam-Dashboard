@@ -16,7 +16,7 @@ import { Kpi } from '../core/models';
 
       <div class="relative mx-auto max-w-[88rem] px-6 pb-10 pt-12 lg:px-10">
         <h1 id="hero-h1" class="max-w-[22em] text-[clamp(1.9rem,3.6vw,3.6rem)] font-medium leading-[1.2] tracking-tight text-navy text-balance">
-          {{ i18n.t('heroDone') }}
+          @if (sprint()) { {{ i18n.t('heroSprintDone', { name: sprint()! }) }} } @else { {{ i18n.t('heroDone') }} }
           <b class="fig">{{ k().counts.done }}</b>
           {{ i18n.t('heroOf') }} <b class="fig">{{ k().total }}</b> {{ i18n.t('heroTasks') }}
           (<b class="fig">{{ pct() }}%</b>)
@@ -70,6 +70,8 @@ import { Kpi } from '../core/models';
 export class HeroComponent {
   readonly i18n = inject(I18n);
   readonly k = input.required<Kpi>();
+  /** Current sprint name, or null when the headline covers the whole board. */
+  readonly sprint = input<string | null>(null);
   readonly pct = computed(() => Math.round(this.k().completionRate * 100));
   readonly overduePct = computed(() => (this.k().open ? Math.round((this.k().overdue / this.k().open) * 100) : 0));
   readonly delta = computed(() => this.k().closedThisWeek - this.k().closedLastWeek);

@@ -66,7 +66,8 @@ export function mockRaw(now = Date.now()) {
     if (r() < 0.12) who.push(pick(PEOPLE));
     const project = pick(PROJECTS);
     const roll = r();
-    const st = roll < 0.14 ? STATUSES[0] : roll < 0.36 ? STATUSES[1] : roll < 0.46 ? STATUSES[2] : STATUSES[3];
+    let st = roll < 0.14 ? STATUSES[0] : roll < 0.36 ? STATUSES[1] : roll < 0.46 ? STATUSES[2] : STATUSES[3];
+    if (st.type === 'closed' && r() < 0.1) st = { status: 'cancelled', type: 'closed' };
     const done = st.type === 'closed';
     const created = now - Math.floor(r() * 84) * DAY;
     const due = done ? created + Math.floor(r() * 20 + 3) * DAY : now + Math.floor(r() * 30 - 3) * DAY;
@@ -82,8 +83,8 @@ export function mockRaw(now = Date.now()) {
       date_created: String(Math.round(created)),
       date_closed: closed ? String(Math.round(closed)) : null,
       date_updated: String(Math.round(closed ?? now - r() * 6 * DAY)),
-      list: { id: 1, name: project },
-      folder: { name: 'hidden' },
+      list: { id: 1, name: i % 5 < 2 ? 'Sprint 42 (Current)' : `Sprint ${41 - (i % 3)}` },
+      folder: { name: project },
       tags: [],
       url: '#',
       text_content: '',
@@ -102,7 +103,7 @@ export function mockRaw(now = Date.now()) {
       date_created: String(now - 5 * DAY),
       date_closed: null,
       date_updated: String(now - 2 * DAY),
-      list: { id: 1, name: 'Backlog' },
+      list: { id: 1, name: 'Sprint 42 (Current)' },
       folder: { name: 'hidden' },
       tags: [],
       url: '#',

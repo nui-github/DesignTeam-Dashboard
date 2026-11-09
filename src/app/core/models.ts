@@ -79,6 +79,10 @@ export interface DashboardData {
   mode: 'live' | 'demo';
   generatedAt: number;
   cachedAt?: number;
+  /** sprint = name of the current sprint List; KPIs/people are scoped to it. null = whole board. */
+  scope: { sprint: string | null };
+  /** Cancelled tasks in the headline scope, excluded from every count and rate. */
+  cancelled: number;
   kpi: Kpi;
   trend: TrendPoint[];
   users: Person[];

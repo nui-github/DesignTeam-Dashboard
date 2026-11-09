@@ -16,6 +16,10 @@ const startOfWeek = (ms) => {
 };
 const num = (v) => (v === null || v === undefined || v === '' ? null : Number(v));
 
+// Statuses that mean "dropped", not "finished": excluded from every count and rate.
+const CANCELLED = /cancel|ยกเลิก|reject|abandon|won'?t|obsolete/i;
+export const isCancelled = (task) => CANCELLED.test(task.status?.status || '');
+
 // done | review | todo | active
 export function statusGroup(task) {
   const s = task.status || {};
@@ -36,6 +40,7 @@ function normalizeTask(t, now) {
     name: t.name,
     status: t.status?.status || '',
     group,
+    cancelled: isCancelled(t),
     priority: t.priority?.priority?.toLowerCase() || null,
     due,
     overdue,
@@ -119,8 +124,18 @@ const clip = (s, n) => (s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s);
 export function aggregate(raw, { now = Date.now(), mode = 'live' } = {}) {
   // Meeting records are shown in their own section, not counted as design work.
   const meetingSet = new Set(raw.meetingIds || []);
-  const tasks = raw.tasks.filter((t) => !meetingSet.has(t.id)).map((t) => normalizeTask(t, now));
-  const team = summarize(tasks, now);
+  const everything = raw.tasks.filter((t) => !meetingSet.has(t.id)).map((t) => normalizeTask(t, now));
+  const tasks = everything.filter((t) => !t.cancelled);
+
+  // Headline scope: the current sprint (a List whose name matches CURRENT_SPRINT_MATCH, default "current"),
+  // falling back to everything when no such List exists.
+  const sprintRe = new RegExp(process.env.CURRENT_SPRINT_MATCH || 'current', 'i');
+  const sprintTasks = tasks.filter((t) => sprintRe.test(t.list));
+  const sprintName = sprintTasks[0]?.list || null;
+  const scoped = sprintTasks.length ? sprintTasks : tasks;
+  const team = summarize(scoped, now);
+  // Cancelled tasks that would have belonged to the headline scope (shown as a footnote).
+  const cancelled = everything.filter((t) => t.cancelled && (!sprintName || sprintRe.test(t.list))).length;
 
   // KPI extras
   const thisWeek = startOfWeek(now);
@@ -142,7 +157,7 @@ export function aggregate(raw, { now = Date.now(), mode = 'live' } = {}) {
   // People — a task with 2 assignees counts for both; team totals count it once.
   const people = new Map();
   const unassigned = [];
-  for (const t of tasks) {
+  for (const t of scoped) {
     if (!t.assignees.length) unassigned.push(t);
     for (const a of t.assignees) {
       if (!people.has(a.id)) people.set(a.id, { person: { id: a.id, name: a.name, email: a.email, initials: a.initials, avatar: a.avatar }, tasks: [] });
@@ -195,6 +210,8 @@ export function aggregate(raw, { now = Date.now(), mode = 'live' } = {}) {
   return {
     mode,
     generatedAt: now,
+    scope: { sprint: sprintName ? sprintName.replace(/\s*\(current\)\s*/i, '').trim() : null },
+    cancelled,
     kpi: { ...team, closedThisWeek, closedLastWeek, members: users.length },
     trend,
     users,
